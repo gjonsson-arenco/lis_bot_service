@@ -137,6 +137,7 @@ describe('BotProcessor', () => {
         'crear orden hemograma',
         'tool_001',
         'create_order',
+        { patientName: 'Juan', examType: 'hemograma', requestingDoctor: 'Dr. Pérez' },
         { orderId: 'ORD-001' },
         undefined,
       );
@@ -194,6 +195,7 @@ describe('BotProcessor', () => {
         'buscar orden ORD-999',
         'tool_002',
         'query_order',
+        { orderId: 'ORD-999' },
         expect.objectContaining({ error: true }),
         undefined,
       );

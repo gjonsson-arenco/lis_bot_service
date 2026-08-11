@@ -130,6 +130,7 @@ export class BotProcessor {
           userMessage,
           toolCall.id,
           toolCall.name,
+          toolCall.input,
           toolResult,
           mediaUrl,
         );

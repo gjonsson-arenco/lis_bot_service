@@ -62,12 +62,25 @@ export class ClaudeService {
     userMessage: string,
     toolCallId: string,
     toolName: string,
+    toolInput: Record<string, any>,
     toolResult: unknown,
     mediaUrl?: string,
   ): Promise<ClaudeResponse> {
     const messages = this.buildMessages(history, userMessage, mediaUrl);
 
-    // Add assistant's previous turn (tool use) and tool result
+    // Anthropic requires: assistant(tool_use) followed by user(tool_result)
+    messages.push({
+      role: 'assistant',
+      content: [
+        {
+          type: 'tool_use',
+          id: toolCallId,
+          name: toolName,
+          input: toolInput,
+        },
+      ],
+    } as any);
+
     messages.push({
       role: 'user',
       content: [
