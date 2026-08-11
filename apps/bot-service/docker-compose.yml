@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+  bot-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: npm run start:dev
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      CLAUDE_MODEL: claude-sonnet-5
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      SQS_QUEUE_URL: http://localstack:4566/000000000000/bot-processing-queue
+      SQS_MAX_MESSAGES: '10'
+      SQS_WAIT_TIME: '20'
+      SQS_VISIBILITY_TIMEOUT: '30'
+      DYNAMODB_TABLE: bot_conversations
+      DYNAMODB_REGION: us-east-1
+      REDIS_URL: redis://redis:6379
+      SESSION_CACHE_TTL: '3600'
+      LIS_BACKEND_URL: http://lis-mock:8000
+      LIS_API_KEY: dev-key
+      WHATSAPP_SERVICE_URL: http://whatsapp-mock:3001
+    depends_on:
+      localstack:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    networks:
+      - lis-network
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - '4566:4566'
+    environment:
+      SERVICES: sqs,dynamodb
+      DEFAULT_REGION: us-east-1
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - localstack-data:/var/lib/localstack
+    networks:
+      - lis-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - lis-network
+
+volumes:
+  localstack-data:
+
+networks:
+  lis-network:
+    driver: bridge
